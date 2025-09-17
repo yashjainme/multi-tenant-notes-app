@@ -7,13 +7,15 @@ import { NotFoundError, TenantIsolationError } from '@/types';
 // POST /api/tenants/[slug]/upgrade - Upgrade tenant subscription (Admin only)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  context: { params: { slug: string } }   // <-- correct typing
 ) {
   return withAdminAuth(request, async (req, user) => {
     try {
+      const { slug } = context.params;
+
       // Get tenant by slug
-      const tenant = await db.getTenantBySlug(params.slug);
-      
+      const tenant = await db.getTenantBySlug(slug);
+
       if (!tenant) {
         throw new NotFoundError('Tenant not found');
       }
@@ -39,17 +41,17 @@ export async function POST(
       );
     } catch (error: unknown) {
       console.error('Error upgrading subscription:', error);
-      
+
       if (error instanceof NotFoundError || error instanceof TenantIsolationError) {
         return createErrorResponse(error.message, error.statusCode);
       }
-      
+
       return createErrorResponse('Failed to upgrade subscription', 500);
     }
   });
 }
 
-export  function OPTIONS() {
+export function OPTIONS() {
   return new Response(null, {
     status: 200,
     headers: {

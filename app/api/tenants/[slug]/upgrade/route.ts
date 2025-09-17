@@ -7,11 +7,12 @@ import { NotFoundError, TenantIsolationError } from '@/types';
 // POST /api/tenants/[slug]/upgrade - Upgrade tenant subscription (Admin only)
 export async function POST(
   request: NextRequest,
-  context: { params: { slug: string } }   // <-- correct typing
+  { params }: { params: Promise<{ slug: string }> }  // Updated typing for App Router
 ) {
   return withAdminAuth(request, async (req, user) => {
     try {
-      const { slug } = context.params;
+      // Await the params since they're now a Promise
+      const { slug } = await params;
 
       // Get tenant by slug
       const tenant = await db.getTenantBySlug(slug);
